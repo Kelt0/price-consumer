@@ -1,36 +1,30 @@
 package com.example.price_consumer.service;
 
-import com.example.price_consumer.PriceRepository;
-import com.example.price_consumer.entity.PriceTrackJPA;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.springframework.kafka.annotation.KafkaListener;
+import com.example.price_consumer.repositories.PriceRepository;
+import com.example.price_consumer.PriceUpdate;
+import com.example.price_consumer.entity.PriceTrackEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Service
 public class PriceConsumer {
     private final PriceRepository priceRepository;
+    private static final Logger log = LoggerFactory.getLogger(PriceConsumer.class);
 
-    public PriceConsumer(PriceRepository priceRepository) {
+    @Autowired
+    public PriceConsumer(PriceRepository priceRepository, ObjectMapper mapper) {
         this.priceRepository = priceRepository;
     }
 
-    @KafkaListener(topics = "price-topic", groupId = "price-group")
-    public void consumePriceData(String message) {
-        System.out.println("Получено сообщение из Kafka: " + message);
-
-        try {
-            JSONObject obj = new JSONObject(message);
-            Double price = obj.getDouble("suplied_price");
-            PriceTrackJPA priceTrack = new PriceTrackJPA(price, new Date().toInstant());
-            priceRepository.save(priceTrack);
-
-            System.out.println("Данные внесены в БД");
-
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+    public void consumePriceData(PriceUpdate suppliedPrice) {
+        log.info("Получено сообщение из Kafka {}", suppliedPrice.getSuppliedPrice());
+        PriceTrackEntity priceTrack = new PriceTrackEntity(suppliedPrice.getSuppliedPrice(), Instant.now());
+        priceRepository.save(priceTrack);
+        log.info("Данные внесены в БД.");
     }
 }

@@ -1,18 +1,28 @@
 package com.example.price_consumer;
 
-import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class PriceUpdate {
+    public double suppliedPrice;
 
-    private double suplied_price;
-
-
-    public double getPrice() {
-        return suplied_price;
+    public double getSuppliedPrice() {
+        return suppliedPrice;
     }
 
-    public void setPrice(double suplied_price) {
-        this.suplied_price = suplied_price;
+    public void setSuppliedPrice(double suppliedPrice) {
+        this.suppliedPrice = suppliedPrice;
+    }
+
+    public PriceUpdate(double suppliedPrice) {
+        this.suppliedPrice = suppliedPrice;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "suppliedPrice=" + suppliedPrice +
+                '}';
+    }
+
+    public PriceUpdate() {
     }
 }
+

@@ -3,28 +3,27 @@ package com.example.price_consumer.entity;
 import jakarta.persistence.*;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Entity
 @Table(name = "price_track", schema = "price_db")
-public class PriceTrackJPA {
+public class PriceTrackEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "track_id", nullable = false)
     private Long id;
 
-    @Column(name = "suplied_price", nullable = false)
-    private Double supliedPrice;
+    @Column(name = "supplied_price", nullable = false, precision = 10, scale = 2)
+    private Double suppliedPrice;
 
     @Column(name = "track_time", nullable = false)
     private Instant trackTime;
 
-    public PriceTrackJPA(Double supliedPrice, Instant trackTime) {
-        this.supliedPrice = supliedPrice;
+    public PriceTrackEntity(Double suppliedPrice, Instant trackTime) {
+        this.suppliedPrice = suppliedPrice;
         this.trackTime = trackTime;
     }
 
-    public PriceTrackJPA() {
+    public PriceTrackEntity() {
 
     }
 
@@ -36,12 +35,12 @@ public class PriceTrackJPA {
         this.id = id;
     }
 
-    public Double getSupliedPrice() {
-        return supliedPrice;
+    public Double getSuppliedPrice() {
+        return suppliedPrice;
     }
 
-    public void setSupliedPrice(Double supliedPrice) {
-        this.supliedPrice = supliedPrice;
+    public void setSuppliedPrice(Double suppliedPrice) {
+        this.suppliedPrice = suppliedPrice;
     }
 
     public Instant getTrackTime() {

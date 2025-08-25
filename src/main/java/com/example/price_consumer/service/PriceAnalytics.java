@@ -1,49 +1,44 @@
 package com.example.price_consumer.service;
-
-import com.example.price_consumer.PriceRepository;
+import com.example.price_consumer.entity.AnalyticalEntity;
+import com.example.price_consumer.repositories.AnalyticalRepository;
 import com.example.price_consumer.PriceUpdate;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.time.Instant;
+import java.util.DoubleSummaryStatistics;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 //создаем аналитику раз в 10 генераций
 
 @Service
 public class PriceAnalytics {
-    private final PriceRepository priceRepository;
+    private static final Logger log = LoggerFactory.getLogger(PriceAnalytics.class);
+    private final AnalyticalRepository analyticalRepository;
 
-    public PriceAnalytics(PriceRepository priceRepository) {
-        this.priceRepository = priceRepository;
-    }
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Queue<Double> recentPrices = new LinkedList<>();
     private static final int MAX_PRICES = 10;
     private int messageCount = 0;
 
-    @KafkaListener(topics = "price-topic", groupId = "price-group")
-    public void PriceAnalysis(String message) {
-        System.out.println("Анализирую полученные данные из сообщения Kafka: " + message);
+    @Autowired
+    public PriceAnalytics(AnalyticalRepository analyticalRepository) {
+        this.analyticalRepository = analyticalRepository;
+    }
 
-        try {
-            Double price = objectMapper.readTree(message).get("suplied_price").asDouble();
-            recentPrices.add(price);
+    public void priceAnalysis(PriceUpdate suppliedPrice) {
+        log.info("Анализирую полученные данные из сообщения Kafka: {}", suppliedPrice.getSuppliedPrice());
+            recentPrices.add(suppliedPrice.getSuppliedPrice());
             if (recentPrices.size() > MAX_PRICES) {
                 recentPrices.poll();
             }
             messageCount++;
              if (messageCount % MAX_PRICES == 0) {
                  performAnalysis();
+                 messageCount = 0;
              }
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private void performAnalysis() {
@@ -51,15 +46,17 @@ public class PriceAnalytics {
             return;
         }
 
-        double minPrice = recentPrices.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
-        double maxPrice = recentPrices.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
-        double averagePrice = recentPrices.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        DoubleSummaryStatistics statistics = recentPrices.stream().mapToDouble(Double::doubleValue).summaryStatistics();
 
-        System.out.println("-----------------------------------");
-        System.out.printf("Анализ последних %d генераций:\n", recentPrices.size());
-        System.out.printf("Самая низкая цена: %.2f\n", minPrice);
-        System.out.printf("Самая высокая цена: %.2f\n", maxPrice);
-        System.out.printf("Средняя цена: %.2f\n", averagePrice);
-        System.out.println("-----------------------------------");
+        log.info("-----------------------------------");
+        log.info("Анализ последних  генераций: {}", statistics.getCount());
+        log.info("Самая низкая цена: {}", statistics.getMin());
+        log.info("Самая высокая цена: {}", statistics.getMax());
+        log.info("Средняя цена: {}", statistics.getAverage());
+        log.info("-----------------------------------");
+
+        AnalyticalEntity analytical = new AnalyticalEntity(statistics.getMin(), statistics.getMax(), statistics.getAverage(), Instant.now());
+        analyticalRepository.save(analytical);
+        log.info("Внесены данные анализа в БД");
     }
 }

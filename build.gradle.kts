@@ -28,7 +28,8 @@ dependencies {
 	runtimeOnly("com.mysql:mysql-connector-j")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.mockito:mockito-core")
 }
 
 tasks.withType<Test> {

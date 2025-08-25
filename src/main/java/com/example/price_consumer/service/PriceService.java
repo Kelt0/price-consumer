@@ -1,38 +1,31 @@
 package com.example.price_consumer.service;
 
-import com.example.price_consumer.PriceRepository;
-import com.example.price_consumer.entity.PriceTrackJPA;
-import jakarta.transaction.Transactional;
-import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import com.example.price_consumer.PriceUpdate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 public class PriceService {
-    private final PriceRepository priceRepository;
+   private static final Logger log = LoggerFactory.getLogger(PriceService.class);
+   private final PriceAnalytics priceAnalytics;
+   private final PriceConsumer priceConsumer;
 
-    public PriceService(PriceRepository priceRepository) {
-        this.priceRepository = priceRepository;
+   @Autowired
+    public PriceService(PriceAnalytics priceAnalytics, PriceConsumer priceConsumer) {
+        this.priceAnalytics = priceAnalytics;
+        this.priceConsumer = priceConsumer;
     }
 
-    public PriceTrackJPA save(PriceTrackJPA priceTrackJPA) {
-        return priceRepository.save(priceTrackJPA);
+    @KafkaListener(topics = "prices-topic", groupId = "price-group", containerFactory = "kafkaListenerContainerFactory")
+    public void trackAndAnalyzePrice(PriceUpdate event) {
+       log.info("Запущен модуль-орекстор");
+       priceAnalytics.priceAnalysis(event);
+       priceConsumer.consumePriceData(event);
     }
 
-    public List<PriceTrackJPA> getAllPriceTracks() {
-        return priceRepository.findAll();
-    }
-
-    public PriceTrackJPA getTaskById(Long id) {
-        return priceRepository.getReferenceById(id);
-    }
-
-    public void deleteTaskById(Long id) {
-        priceRepository.deleteById(id);
-    }
-
-    public PriceTrackJPA updateTaskById(Long id, PriceTrackJPA priceTrackJPA) {
-        return priceRepository.save(priceTrackJPA);
-    }
 }
