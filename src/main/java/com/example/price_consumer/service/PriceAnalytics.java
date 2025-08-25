@@ -55,7 +55,7 @@ public class PriceAnalytics {
         log.info("Средняя цена: {}", statistics.getAverage());
         log.info("-----------------------------------");
 
-        AnalyticalEntity analytical = new AnalyticalEntity(statistics.getMin(), statistics.getMax(), statistics.getAverage(), Instant.now());
+        AnalyticalEntity analytical = new AnalyticalEntity( statistics.getMin(), statistics.getMax(), statistics.getAverage(), Instant.now());
         analyticalRepository.save(analytical);
         log.info("Внесены данные анализа в БД");
     }

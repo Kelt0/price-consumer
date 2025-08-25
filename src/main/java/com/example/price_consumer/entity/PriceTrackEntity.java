@@ -12,7 +12,7 @@ public class PriceTrackEntity {
     @Column(name = "track_id", nullable = false)
     private Long id;
 
-    @Column(name = "supplied_price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "supplied_price", nullable = false)
     private Double suppliedPrice;
 
     @Column(name = "track_time", nullable = false)

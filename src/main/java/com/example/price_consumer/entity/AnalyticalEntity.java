@@ -13,13 +13,13 @@ public class AnalyticalEntity {
     @Column(name = "analytical_id", nullable = false)
     private Long id;
 
-    @Column(name = "min", nullable = false, precision = 10, scale = 2)
+    @Column(name = "min", nullable = false)
     private double min;
 
-    @Column(name = "max", nullable = false, precision = 10, scale = 2)
+    @Column(name = "max", nullable = false)
     private double max;
 
-    @Column(name = "average", nullable = false, precision = 10, scale = 2)
+    @Column(name = "average", nullable = false)
     private double average;
 
     @Column(name = "analytical_time", nullable = false)
