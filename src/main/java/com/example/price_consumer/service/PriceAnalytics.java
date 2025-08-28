@@ -22,10 +22,12 @@ public class PriceAnalytics {
     private final AnalyticalRepository analyticalRepository;
 
     private final AnalyticsState recentPrices = new AnalyticsState(this::performAnalysis);
+    private final NotificationService notificationService;
 
     @Autowired
-    public PriceAnalytics(AnalyticalRepository analyticalRepository) {
+    public PriceAnalytics(AnalyticalRepository analyticalRepository, NotificationService notificationService) {
         this.analyticalRepository = analyticalRepository;
+        this.notificationService = notificationService;
     }
 
     public void priceAnalysis(PriceUpdate suppliedPrice) {
@@ -49,6 +51,13 @@ public class PriceAnalytics {
 
         AnalyticalEntity analytical = new AnalyticalEntity(statistics.getMin(), statistics.getMax(), statistics.getAverage(), Instant.now());
         analyticalRepository.save(analytical);
+
+        String message = String.format("Анализ завершен: \n" +
+                        "Средняя цена: %.2f\n" +
+                        "Макс. цена: %.2f\n" +
+                        "Мин. цена: %.2f",
+                statistics.getAverage(), statistics.getMax(), statistics.getMin());
+        notificationService.sendNotification(message);
     }
 
     // TODO flush by time? N.K.

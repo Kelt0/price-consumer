@@ -1,6 +1,7 @@
 package com.example.price_consumer.service;
 
 import com.example.price_consumer.PriceUpdate;
+import com.example.price_consumer.entity.PriceTrackEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PriceConsumer {
-    private static final Logger log = LoggerFactory.getLogger(PriceConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PriceConsumer.class);
 
     private final PriceService priceService;
 
@@ -21,10 +22,10 @@ public class PriceConsumer {
     // TODO Manual ACK for Kafka
     @KafkaListener(topics = "prices-topic", groupId = "price-group", containerFactory = "kafkaListenerContainerFactory")
     public void consumePriceData(PriceUpdate suppliedPrice) {
-        log.info("Получено сообщение из Kafka {}", suppliedPrice.getSuppliedPrice());
 
-        priceService.trackAndAnalyzePrice(suppliedPrice);
-
-        log.info("Данные внесены в БД.");
+        LOG.info("Получено сообщение из Kafka {}", suppliedPrice.getSuppliedPrice());
+        PriceTrackEntity priceTrack = new PriceTrackEntity(suppliedPrice.getSuppliedPrice(), Instant.now());
+        priceRepository.save(priceTrack);
+        LOG.info("Данные внесены в БД.");
     }
 }
