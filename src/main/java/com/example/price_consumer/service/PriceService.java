@@ -4,11 +4,12 @@ package com.example.price_consumer.service;
 import com.example.price_consumer.PriceUpdate;
 import com.example.price_consumer.entity.PriceTrackEntity;
 import com.example.price_consumer.repositories.PriceRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
