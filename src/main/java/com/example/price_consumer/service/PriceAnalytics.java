@@ -16,29 +16,31 @@ import java.util.Queue;
 
 @Service
 public class PriceAnalytics {
-    private static final Logger log = LoggerFactory.getLogger(PriceAnalytics.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PriceAnalytics.class);
     private final AnalyticalRepository analyticalRepository;
-
     private final Queue<Double> recentPrices = new LinkedList<>();
     private static final int MAX_PRICES = 10;
+    private final NotificationService notificationService;
+
     private int messageCount = 0;
 
     @Autowired
-    public PriceAnalytics(AnalyticalRepository analyticalRepository) {
+    public PriceAnalytics(AnalyticalRepository analyticalRepository, NotificationService notificationService) {
         this.analyticalRepository = analyticalRepository;
+        this.notificationService = notificationService;
     }
 
     public void priceAnalysis(PriceUpdate suppliedPrice) {
-        log.info("Анализирую полученные данные из сообщения Kafka: {}", suppliedPrice.getSuppliedPrice());
-            recentPrices.add(suppliedPrice.getSuppliedPrice());
-            if (recentPrices.size() > MAX_PRICES) {
-                recentPrices.poll();
-            }
-            messageCount++;
-             if (messageCount % MAX_PRICES == 0) {
-                 performAnalysis();
-                 messageCount = 0;
-             }
+        LOG.info("Анализирую полученные данные из сообщения Kafka: {}", suppliedPrice.getSuppliedPrice());
+        recentPrices.add(suppliedPrice.getSuppliedPrice());
+        if (recentPrices.size() > MAX_PRICES) {
+            recentPrices.poll();
+        }
+        messageCount++;
+        if (messageCount % MAX_PRICES == 0) {
+            performAnalysis();
+            messageCount = 0;
+        }
     }
 
     private void performAnalysis() {
@@ -48,15 +50,20 @@ public class PriceAnalytics {
 
         DoubleSummaryStatistics statistics = recentPrices.stream().mapToDouble(Double::doubleValue).summaryStatistics();
 
-        log.info("-----------------------------------");
-        log.info("Анализ последних  генераций: {}", statistics.getCount());
-        log.info("Самая низкая цена: {}", statistics.getMin());
-        log.info("Самая высокая цена: {}", statistics.getMax());
-        log.info("Средняя цена: {}", statistics.getAverage());
-        log.info("-----------------------------------");
+        LOG.debug("-----------------------------------");
+        LOG.debug("Анализ последних  генераций: {}", statistics.getCount());
+        LOG.debug("Самая низкая цена: {}", statistics.getMin());
+        LOG.debug("Самая высокая цена: {}", statistics.getMax());
+        LOG.debug("Средняя цена: {}", statistics.getAverage());
+        LOG.debug("-----------------------------------");
 
         AnalyticalEntity analytical = new AnalyticalEntity( statistics.getMin(), statistics.getMax(), statistics.getAverage(), Instant.now());
         analyticalRepository.save(analytical);
-        log.info("Внесены данные анализа в БД");
+        String message = String.format("Анализ завершен: \n" +
+                        "Средняя цена: %.2f\n" +
+                        "Макс. цена: %.2f\n" +
+                        "Мин. цена: %.2f",
+                statistics.getAverage(), statistics.getMax(), statistics.getMin());
+        notificationService.sendNotification(message);
     }
 }

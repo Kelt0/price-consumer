@@ -1,7 +1,7 @@
 package com.example.price_consumer;
 
 public class PriceUpdate {
-    public double suppliedPrice;
+    private double suppliedPrice;
 
     public double getSuppliedPrice() {
         return suppliedPrice;
