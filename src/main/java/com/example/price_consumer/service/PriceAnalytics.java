@@ -18,19 +18,11 @@ import java.util.Queue;
 @Service
 public class PriceAnalytics {
     private static final Logger LOG = LoggerFactory.getLogger(PriceAnalytics.class);
-<<<<<<< HEAD
 
     private final AnalyticalRepository analyticalRepository;
 
     private final AnalyticsState recentPrices = new AnalyticsState(this::performAnalysis);
-=======
-    private final AnalyticalRepository analyticalRepository;
-    private final Queue<Double> recentPrices = new LinkedList<>();
-    private static final int MAX_PRICES = 10;
     private final NotificationService notificationService;
-
-    private int messageCount = 0;
->>>>>>> master
 
     @Autowired
     public PriceAnalytics(AnalyticalRepository analyticalRepository, NotificationService notificationService) {
@@ -41,17 +33,6 @@ public class PriceAnalytics {
     public void priceAnalysis(PriceUpdate suppliedPrice) {
         LOG.info("Анализирую полученные данные из сообщения Kafka: {}", suppliedPrice.getSuppliedPrice());
         recentPrices.add(suppliedPrice.getSuppliedPrice());
-<<<<<<< HEAD
-=======
-        if (recentPrices.size() > MAX_PRICES) {
-            recentPrices.poll();
-        }
-        messageCount++;
-        if (messageCount % MAX_PRICES == 0) {
-            performAnalysis();
-            messageCount = 0;
-        }
->>>>>>> master
     }
 
     private void performAnalysis() {

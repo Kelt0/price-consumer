@@ -1,10 +1,7 @@
 package com.example.price_consumer.service;
 
 import com.example.price_consumer.PriceUpdate;
-<<<<<<< HEAD
-=======
 import com.example.price_consumer.entity.PriceTrackEntity;
->>>>>>> master
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
