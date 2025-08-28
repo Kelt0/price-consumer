@@ -2,6 +2,9 @@ package com.example.price_consumer.service;
 
 
 import com.example.price_consumer.PriceUpdate;
+import com.example.price_consumer.entity.PriceTrackEntity;
+import com.example.price_consumer.repositories.PriceRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,25 +12,26 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 
 @Service
 public class PriceService {
-   private static final Logger LOG = LoggerFactory.getLogger(PriceService.class);
-   private final PriceAnalytics priceAnalytics;
-   private final PriceConsumer priceConsumer;
+    private static final Logger log = LoggerFactory.getLogger(PriceService.class);
+    private final PriceAnalytics priceAnalytics;
+    private final PriceRepository priceRepository;
 
-   @Autowired
-    public PriceService(PriceAnalytics priceAnalytics, PriceConsumer priceConsumer) {
+    @Autowired
+    public PriceService(PriceAnalytics priceAnalytics, PriceRepository priceRepository) {
         this.priceAnalytics = priceAnalytics;
-        this.priceConsumer = priceConsumer;
+        this.priceRepository = priceRepository;
     }
 
-    @KafkaListener(topics = "prices-topic", groupId = "price-group", containerFactory = "kafkaListenerContainerFactory")
-    public void trackAndAnalyzePrice(PriceUpdate event, Acknowledgment ack) {
-        LOG.info("Запущен модуль-орекстор");
-       priceAnalytics.priceAnalysis(event);
-       priceConsumer.consumePriceData(event);
-       ack.acknowledge();
+    @Transactional
+    public void trackAndAnalyzePrice(PriceUpdate event) {
+        log.info("Запущен модуль-орекстор");
+
+        priceRepository.save(new PriceTrackEntity(event.getSuppliedPrice(), Instant.now()));
+        priceAnalytics.priceAnalysis(event);
     }
 
 }
